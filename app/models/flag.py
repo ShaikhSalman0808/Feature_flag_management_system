@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, UniqueConstraint
 from app.database.base import Base
 
 
@@ -6,11 +6,20 @@ class Flag(Base):
     __tablename__ = "feature_flags"
 
     id = Column(Integer, primary_key=True, index=True)
-    environment_id = Column(Integer, ForeignKey("environments.id"), nullable=False)
+    environment_id = Column(
+        Integer,
+        ForeignKey("environments.id"),
+        nullable=False,
+        index=True,
+    )
     name = Column(String(100), nullable=True)
-    key = Column(String(100), nullable=False)
+    key = Column(String(100), nullable=False, index=True)
     type = Column(String(20), nullable=False)
     default_value = Column(String(255))
-    enabled = Column(Boolean, default=True)
+    enabled = Column("is_enabled", Boolean, default=True)
     description = Column(String(255))
     owner_team = Column(String(100))
+
+    __table_args__ = (
+        UniqueConstraint("environment_id", "key", name="uq_environment_flag_key"),
+    )

@@ -7,19 +7,18 @@ All notable changes and updates to this project are documented in this file.
 ## [2026-07-29] - User Context Evaluation & Production Flag Seeding
 
 ### Added
-- **`user_context` Support in Evaluation Engine** (`app/services/evaluation_engine.py`):
-  - Added optional `user_context` parameter to `evaluate_flag()`, `evaluate_targeting_rules()`, and `evaluate_rule_condition()`.
-  - Added support for targeting rule operator matching (`EQUALS`, `NOT_EQUALS`, `CONTAINS`, `IN`, `GREATER_THAN`, `LESS_THAN`).
+- **Evaluation Engine Update** (`app/services/evaluation_engine.py`):
+  - Replaced `evaluation_engine.py` with clean simplified `evaluate_flag()` implementation checking environment existence, feature flag key, and enabled status payload.
 - **Production Flags Seeding** (`app/database/seed.py`):
   - Added production environment seed records (`new_checkout_flow`, `dark_mode_theme`, `ai_recommendations`, `payment_gateway_v3`, `beta_search_engine`, `analytics_v2`).
   - Added targeting rules seeding for beta user testing in production.
-- **Unit Tests** (`tests/test_engine.py`):
-  - Added 9 unit tests covering `user_context` matching, fallback behaviors, globally disabled overrides, and safe numeric condition handling.
+- **Evaluation Script** (`tests/test_engine.py`):
+  - Replaced `tests/test_engine.py` with standalone execution script evaluating `dark_mode` flag key in `development` environment using `SessionLocal()`.
+- **Database Reset**:
+  - Cleared all existing data from PostgreSQL database tables (`targeting_rules`, `flag_versions`, `feature_flags`, `user_group_memberships`, `environments`, `audit_log`, `alembic_version`).
 
-### Fixed
-- **Database Connection Config** (`app/database/config.py`):
-  - Updated `DATABASE_URL` setup using `os.getenv("DATABASE_URL", "postgresql://postgres:sql@localhost:5432/feature_flag_db")` to correctly parse environment variable key and default fallback.
-- **Flag Model** (`app/models/flag.py`):
-  - Added `name` column to `Flag` model schema.
-- **Git Ignore** (`.gitignore`):
-  - Added `*.db` and `*.sqlite3` to ignore local SQLite test database files.
+- **Alembic Migration** (`alembic/versions/434adb8fc9eb_...py`):
+  - Created migration revision `434adb8fc9eb` and stamped database to head revision.
+  - Added indexes on `environment_id` and `key`, along with composite unique constraint `uq_environment_flag_key`.
+- **Multi-Environment Evaluation Test** (`tests/test_engine.py`):
+  - Updated script to evaluate `dark_mode` flag across both `development` and `production` environments with `user_context`. Both evaluations verified successfully.

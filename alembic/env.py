@@ -16,6 +16,8 @@ import app.models
 
 target_metadata = Base.metadata
 
+config = context.config
+
 if DATABASE_URL:
     config.set_main_option("sqlalchemy.url", DATABASE_URL)
 # other values from the config, defined by the needs of env.py,
