@@ -238,6 +238,72 @@ def test_evaluate_flag_with_targeting_rules(db_session):
     assert non_matching_result["enabled"] is False
 
 
+def test_evaluate_flag_without_user_context_fallback(db_session):
+    """Test evaluate_flag falls back to flag.enabled when user_context is omitted even if rules exist."""
+    env = Environment(name="Production", description="Production environment")
+    db_session.add(env)
+    db_session.commit()
+
+    flag = Flag(
+        name="Fallback Search",
+        key="fallback_search",
+        type="string",
+        enabled=True,
+        environment_id=env.id,
+        default_value="standard",
+    )
+    db_session.add(flag)
+    db_session.commit()
+
+    rule = TargetingRule(flag_id=flag.id, attribute="group", operator="EQUALS", value="beta_testers")
+    db_session.add(rule)
+    db_session.commit()
+
+    # No user_context passed -> falls back to flag.enabled (True)
+    res = evaluate_flag(db=db_session, flag_key="fallback_search", environment_name="Production")
+    assert res["success"] is True
+    assert res["enabled"] is True
+
+
+def test_evaluate_flag_globally_disabled_overrides_rules(db_session):
+    """Test globally disabled flag evaluates to False even if user_context matches targeting rules."""
+    env = Environment(name="Production", description="Production environment")
+    db_session.add(env)
+    db_session.commit()
+
+    flag = Flag(
+        name="Disabled Flag",
+        key="disabled_flag",
+        type="boolean",
+        enabled=False,
+        environment_id=env.id,
+        default_value="off",
+    )
+    db_session.add(flag)
+    db_session.commit()
+
+    rule = TargetingRule(flag_id=flag.id, attribute="role", operator="EQUALS", value="admin")
+    db_session.add(rule)
+    db_session.commit()
+
+    # User is admin, but flag is globally disabled -> enabled is False
+    res = evaluate_flag(
+        db=db_session,
+        flag_key="disabled_flag",
+        environment_name="Production",
+        user_context={"user_id": "admin1", "role": "admin"},
+    )
+    assert res["success"] is True
+    assert res["enabled"] is False
+
+
+def test_evaluate_rule_condition_invalid_numeric_conversion():
+    """Test evaluate_rule_condition handles invalid numeric inputs safely."""
+    assert evaluate_rule_condition("not_a_number", "GREATER_THAN", "10") is False
+    assert evaluate_rule_condition("not_a_number", "LESS_THAN", "10") is False
+    assert evaluate_rule_condition(None, "EQUALS", "anything") is False
+
+
 if __name__ == "__main__":
     db = SessionLocal()
     try:
