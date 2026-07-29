@@ -6,17 +6,11 @@ class Flag(Base):
     __tablename__ = "feature_flags"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100), nullable=False)
-    key = Column(String(100), unique=True, nullable=False, index=True)
+    environment_id = Column(Integer, ForeignKey("environments.id"), nullable=False)
+    name = Column(String(100), nullable=True)
+    key = Column(String(100), nullable=False)
+    type = Column(String(20), nullable=False)
+    default_value = Column(String(255))
+    enabled = Column(Boolean, default=True)
     description = Column(String(255))
-    is_enabled = Column(Boolean, default=False)
-    environment_id = Column(Integer, ForeignKey("environments.id"), nullable=True)
-    default_value = Column(String(255), nullable=True)
-
-    @property
-    def enabled(self):
-        return self.is_enabled
-
-    @enabled.setter
-    def enabled(self, value):
-        self.is_enabled = value
+    owner_team = Column(String(100))
