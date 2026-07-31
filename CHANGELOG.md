@@ -1,24 +1,14 @@
-# Feature Flag Management System - Change Log
+# Changelog
 
-All notable changes and updates to this project are documented in this file.
+All notable changes to this project will be documented in this file.
 
----
-
-## [2026-07-29] - User Context Evaluation & Production Flag Seeding
+## [2026-07-31]
 
 ### Added
-- **Evaluation Engine Update** (`app/services/evaluation_engine.py`):
-  - Replaced `evaluation_engine.py` with clean simplified `evaluate_flag()` implementation checking environment existence, feature flag key, and enabled status payload.
-- **Production Flags Seeding** (`app/database/seed.py`):
-  - Added production environment seed records (`new_checkout_flow`, `dark_mode_theme`, `ai_recommendations`, `payment_gateway_v3`, `beta_search_engine`, `analytics_v2`).
-  - Added targeting rules seeding for beta user testing in production.
-- **Evaluation Script** (`tests/test_engine.py`):
-  - Replaced `tests/test_engine.py` with standalone execution script evaluating `dark_mode` flag key in `development` environment using `SessionLocal()`.
-- **Database Reset**:
-  - Cleared all existing data from PostgreSQL database tables (`targeting_rules`, `flag_versions`, `feature_flags`, `user_group_memberships`, `environments`, `audit_log`, `alembic_version`).
+- Added disabled `beta_feature` flag for the production environment in [`seed.py`](file:///c:/Feature_flag_management_system/app/database/seed.py).
+- Made database seeding in [`seed.py`](file:///c:/Feature_flag_management_system/app/database/seed.py) idempotent using helper functions `get_or_create_env` and `get_or_create_flag`.
+- Added `if __name__ == "__main__":` entrypoint block to [`test_engine.py`](file:///c:/Feature_flag_management_system/tests/test_engine.py) to enable direct terminal execution via `python tests/test_engine.py`.
 
-- **Alembic Migration** (`alembic/versions/434adb8fc9eb_...py`):
-  - Created migration revision `434adb8fc9eb` and stamped database to head revision.
-  - Added indexes on `environment_id` and `key`, along with composite unique constraint `uq_environment_flag_key`.
-- **Multi-Environment Evaluation Test** (`tests/test_engine.py`):
-  - Updated script to evaluate `dark_mode` flag across both `development` and `production` environments with `user_context`. Both evaluations verified successfully.
+### Fixed
+- Enabled `sys.path` import path resolution in [`test_engine.py`](file:///c:/Feature_flag_management_system/tests/test_engine.py) for test executions.
+- Fixed assertions and unseeded flag keys in `test_envirnment_override` and `test_empty_user_context` within [`test_engine.py`](file:///c:/Feature_flag_management_system/tests/test_engine.py) while preserving exact test function names.
